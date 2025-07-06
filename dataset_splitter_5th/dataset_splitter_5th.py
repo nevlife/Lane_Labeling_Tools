@@ -1,20 +1,24 @@
 #!/usr/bin/env python3
 """
 파일 이동 도구
-디렉토리1에서 5번째마다 있는 파일을 디렉토리2로 이동하는 도구
+디렉토리1에서 N번째마다 있는 파일을 디렉토리2로 이동하는 도구
 """
 import sys
 import os
 import shutil
 from pathlib import Path
 
-def move_every_fifth_file(source_dir, target_dir):
-    """디렉토리1에서 5번째마다 있는 파일을 디렉토리2로 이동"""
+# 설정 변수
+MOVE_INTERVAL = 5  # 2개 중 1개 이동 (원하는 간격으로 변경 가능)
+
+def move_every_nth_file(source_dir, target_dir, interval=MOVE_INTERVAL):
+    """디렉토리1에서 N번째마다 있는 파일을 디렉토리2로 이동"""
     source_path = Path(source_dir)
     target_path = Path(target_dir)
     
     print(f"원본 디렉토리: {source_path}")
     print(f"이동 대상 디렉토리: {target_path}")
+    print(f"이동 간격: {interval}개 중 1개")
     print("-" * 50)
     
     # 디렉토리1의 파일 목록
@@ -35,11 +39,11 @@ def move_every_fifth_file(source_dir, target_dir):
     
     print()
     
-    # 5번째마다 파일 선택 (인덱스 4, 9, 14, 19, ...)
+    # N번째마다 파일 선택 (interval에 따라)
     moved_count = 0
     
     for i, source_file in enumerate(source_files):
-        if (i + 1) % 5 == 0:  # 5번째마다 (5, 10, 15, 20, ...)
+        if (i + 1) % interval == 0:  # N번째마다
             target_file = target_path / source_file.name
             
             try:
@@ -62,8 +66,8 @@ def move_every_fifth_file(source_dir, target_dir):
 
 if __name__ == "__main__":
     # 하드코딩된 디렉토리 경로
-    source = "C:/Users/USER/Tools/dataset_3/ll_seg_annotations/train"
-    target = "C:/Users/USER/Tools/dataset_3/ll_seg_annotations/val"
+    source = "C:/Users/USER/Lane_Labeling_Tools/dataset_splitter_5th/input"
+    target = "C:/Users/USER/Lane_Labeling_Tools/dataset_splitter_5th/output"
     
     # 디렉토리 존재 여부 확인
     source_path = Path(source)
@@ -75,12 +79,13 @@ if __name__ == "__main__":
     
     # 확인 메시지
     print("=" * 60)
-    print("📦 파일 이동 도구 (5번째마다)")
+    print("📦 파일 이동 도구")
     print("=" * 60)
     print(f"원본: {source}")
     print(f"대상: {target}")
+    print(f"간격: {MOVE_INTERVAL}개 중 1개 이동")
     print()
-    print("⚠️ 5번째마다 있는 파일들이 이동됩니다!")
+    print(f"⚠️ {MOVE_INTERVAL}번째마다 있는 파일들이 이동됩니다!")
     print()
     
     response = input("계속 진행하시겠습니까? (y/N): ")
@@ -89,4 +94,4 @@ if __name__ == "__main__":
         sys.exit(0)
     
     print()
-    move_every_fifth_file(source, target)
+    move_every_nth_file(source, target)

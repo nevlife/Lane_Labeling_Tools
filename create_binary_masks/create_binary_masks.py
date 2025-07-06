@@ -58,7 +58,7 @@ def create_binary_masks_from_coco(json_path, output_dir="binary_masks"):
     
     # 처리 결과 추적
     processed_files = []
-    failed_files = []
+    black_mask_files = []
     
     # 각 이미지에 대해 마스크 생성
     for image_info in coco_data['images']:
@@ -76,19 +76,18 @@ def create_binary_masks_from_coco(json_path, output_dir="binary_masks"):
         # 해당 이미지의 어노테이션들 가져오기
         annotations = annotations_by_image.get(image_id, [])
         
-        if not annotations:
-            print(f"경고: {image_name}에 어노테이션이 없습니다.")
-            failed_files.append(image_name)
-            continue
-        
-        # 빈 마스크 생성
+        # 빈 마스크 생성 (검은색)
         combined_mask = np.zeros((height, width), dtype=np.uint8)
         
-        # 모든 어노테이션을 하나의 마스크에 합치기
-        for ann in annotations:
-            segmentation = ann['segmentation']
-            mask = create_binary_mask_from_segmentation(segmentation, width, height)
-            combined_mask = cv2.bitwise_or(combined_mask, mask)
+        if not annotations:
+            print(f"검은색 마스크 생성: {image_name} (어노테이션 없음)")
+            black_mask_files.append(image_name)
+        else:
+            # 모든 어노테이션을 하나의 마스크에 합치기
+            for ann in annotations:
+                segmentation = ann['segmentation']
+                mask = create_binary_mask_from_segmentation(segmentation, width, height)
+                combined_mask = cv2.bitwise_or(combined_mask, mask)
         
         # 마스크 저장
         output_path = os.path.join(output_dir, f"{base_name}.jpg")
@@ -102,15 +101,16 @@ def create_binary_masks_from_coco(json_path, output_dir="binary_masks"):
     # 처리 결과 요약
     print(f"\n=== 처리 결과 요약 ===")
     print(f"전체 이미지 수: {len(coco_data['images'])}")
-    print(f"성공적으로 처리된 파일 수: {len(processed_files)}")
-    print(f"처리 실패한 파일 수: {len(failed_files)}")
+    print(f"정상 마스크 생성 파일 수: {len(processed_files) - len(black_mask_files)}")
+    print(f"검은색 마스크 생성 파일 수: {len(black_mask_files)}")
+    print(f"총 처리된 파일 수: {len(processed_files)}")
     
-    if failed_files:
-        print(f"\n처리되지 않은 파일들:")
-        for file in failed_files:
+    if black_mask_files:
+        print(f"\n검은색 마스크로 저장된 파일들 (어노테이션 없음):")
+        for file in black_mask_files:
             print(f"  - {file}")
-    else:
-        print(f"\n모든 파일이 성공적으로 처리되었습니다!")
+    
+    print(f"\n모든 파일이 성공적으로 처리되었습니다!")
 
 def visualize_masks(json_path, num_samples=3):
     """몇 개의 마스크를 시각화합니다."""
@@ -170,7 +170,7 @@ def visualize_masks(json_path, num_samples=3):
             break
 
 if __name__ == "__main__":
-    json_path = "C:/Users/USER/Tools/create_binary_masks/_annotations.coco.json"
+    json_path = "C:/Users/USER/Lane_Labeling_Tools/create_binary_masks/_annotations.coco.json"
     
     # 마스크 생성
     print("이진 마스크를 생성합니다...")
